@@ -1,10 +1,13 @@
-use winit::window::Window;
+use winit::{
+    window::Window,
+    event::WindowEvent,
+};
 
-struct State<'a> {
+pub struct State<'a> {
     surface: wgpu::Surface<'a>,
     device: wgpu::Device,
     queue: wgpu::Queue,
-    config: wgpu::SurfaceConfig,
+    config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
     // Window need to be declared after surface
     // because it contains unsafe reference, so
@@ -14,7 +17,7 @@ struct State<'a> {
 }
 
 impl<'a> State<'a> {
-    async fn new(window: &'a Window) -> State<'a> {
+    pub async fn new(window: &'a Window) -> State<'a> {
         let size = window.inner_size();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
@@ -22,7 +25,7 @@ impl<'a> State<'a> {
             backends: wgpu::Backends::PRIMARY,
             #[cfg(target_arch="wasm32")]
             backends: wgpu::Backends::GL,
-            ..default()
+            ..Default::default()
         });
 
         let surface = instance.create_surface(window).unwrap();
@@ -44,7 +47,7 @@ impl<'a> State<'a> {
                     wgpu::Limits::default()
                 },
                 label: None,
-                memory_hints: default(),
+                memory_hints: Default::default(),
             },
             None,
         ).await.unwrap();
@@ -61,7 +64,7 @@ impl<'a> State<'a> {
             width: size.width,
             height: size.height,
             present_mode: surface_caps.present_modes[0],
-            alphas_mod: surface_caps.alpha_modes[0],
+            alpha_mode: surface_caps.alpha_modes[0],
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
         };

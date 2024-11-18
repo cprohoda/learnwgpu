@@ -14,8 +14,13 @@ use console_error_panic_hook;
 #[cfg(target_arch="wasm32")]
 use wgpu::web_sys;
 
+
+mod state;
+
+use state::State;
+
 #[cfg_attr(target_arch="wasm32", wasm_bindgen(start))]
-pub fn run() {
+pub async fn run() {
     cfg_if::cfg_if! {
         if #[cfg(target_arch = "wasm32")] {
             std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -44,11 +49,13 @@ pub fn run() {
             .expect("Couldn't append canvas to document body.");
     }
 
+    let mut state = State::new(&window).await;
+
     event_loop.run(move |event, control_flow| match event {
         Event::WindowEvent {
             ref event,
             window_id,
-        } if window_id == window.id() => match event {
+        } if window_id == state.window().id() => match event {
             WindowEvent::CloseRequested
             | WindowEvent::KeyboardInput {
                 event: KeyEvent {
@@ -57,10 +64,7 @@ pub fn run() {
                     ..
                 },
                 ..
-            } => {
-                info!("Hi");
-                control_flow.exit();
-            },
+            } => control_flow.exit(),
             _ => {},
         },
         _ => {},
