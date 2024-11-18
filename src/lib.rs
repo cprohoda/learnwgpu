@@ -19,6 +19,9 @@ mod state;
 
 use state::State;
 
+#[cfg(not(feature = "rwh_05"))]
+compile_error!("rwh_05 feature is not enabled");
+
 #[cfg_attr(target_arch="wasm32", wasm_bindgen(start))]
 pub async fn run() {
     cfg_if::cfg_if! {
