@@ -71,6 +71,25 @@ pub async fn run() {
                 WindowEvent::Resized(physical_size) => {
                     state.resize(*physical_size);
                 },
+                WindowEvent::RedrawRequested => {
+                    state.window().request_redraw();
+
+                    state.update();
+
+                    match state.render() {
+                        Ok(_) =>  {},
+                        Err(
+                            wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated,
+                        ) => state.resize(state.size),
+                        Err(wgpu::SurfaceError::OutOfMemory) => {
+                            log::error!("Out of memory");
+                            control_flow.exit();
+                        },
+                        Err(wgpu::SurfaceError::Timeout) => {
+                            log::warn!("Surface timeout")
+                        }
+                    }
+                }
                 _ => {},
             }
         },
