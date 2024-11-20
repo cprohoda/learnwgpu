@@ -1,3 +1,5 @@
+use std::os::linux::raw::stat;
+
 use winit::{
     event::*,
     event_loop::EventLoop,
@@ -18,9 +20,6 @@ use wgpu::web_sys;
 mod state;
 
 use state::State;
-
-#[cfg(not(feature = "rwh_05"))]
-compile_error!("rwh_05 feature is not enabled");
 
 #[cfg_attr(target_arch="wasm32", wasm_bindgen(start))]
 pub async fn run() {
@@ -54,7 +53,7 @@ pub async fn run() {
 
     let mut state = State::new(&window).await;
 
-    event_loop.run(move |event, control_flow| match event {
+    let _ = event_loop.run(move |event, control_flow| match event {
         Event::WindowEvent {
             ref event,
             window_id,
@@ -68,6 +67,9 @@ pub async fn run() {
                 },
                 ..
             } => control_flow.exit(),
+            WindowEvent::Resized(physical_size) => {
+                state.resize(*physical_size);
+            },
             _ => {},
         },
         _ => {},
