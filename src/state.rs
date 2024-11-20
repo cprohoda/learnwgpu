@@ -92,8 +92,8 @@ impl<'a> State<'a> {
         }
     }
 
-    fn input(&mut self, event: &WindowEvent) -> bool {
-        todo!()
+    pub fn input(&mut self, event: &WindowEvent) -> bool {
+        false
     }
 
     fn update(&mut self) {

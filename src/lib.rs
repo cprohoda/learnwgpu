@@ -57,20 +57,22 @@ pub async fn run() {
         Event::WindowEvent {
             ref event,
             window_id,
-        } if window_id == state.window().id() => match event {
-            WindowEvent::CloseRequested
-            | WindowEvent::KeyboardInput {
-                event: KeyEvent {
-                    state: ElementState::Pressed,
-                    physical_key: PhysicalKey::Code(KeyCode::Escape),
+        } if window_id == state.window().id() => if !state.input(event) {
+            match event {
+                WindowEvent::CloseRequested
+                | WindowEvent::KeyboardInput {
+                    event: KeyEvent {
+                        state: ElementState::Pressed,
+                        physical_key: PhysicalKey::Code(KeyCode::Escape),
+                        ..
+                    },
                     ..
+                } => control_flow.exit(),
+                WindowEvent::Resized(physical_size) => {
+                    state.resize(*physical_size);
                 },
-                ..
-            } => control_flow.exit(),
-            WindowEvent::Resized(physical_size) => {
-                state.resize(*physical_size);
-            },
-            _ => {},
+                _ => {},
+            }
         },
         _ => {},
     });
