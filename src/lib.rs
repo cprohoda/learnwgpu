@@ -1,5 +1,3 @@
-use std::os::linux::raw::stat;
-
 use winit::{
     event::*,
     event_loop::EventLoop,
@@ -68,6 +66,9 @@ pub async fn run() {
                     },
                     ..
                 } => control_flow.exit(),
+                WindowEvent::MouseInput{device_id: _, state: ElementState::Pressed, button: _} => {
+                    state.input(event);
+                },
                 WindowEvent::Resized(physical_size) => {
                     state.resize(*physical_size);
                 },

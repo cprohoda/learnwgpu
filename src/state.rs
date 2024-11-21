@@ -1,6 +1,5 @@
 use winit::{
-    window::Window,
-    event::WindowEvent,
+    event::{ElementState, MouseButton, WindowEvent}, window::Window
 };
 
 pub struct State<'a> {
@@ -14,6 +13,7 @@ pub struct State<'a> {
     // it has to get created and dropped afterwards
     // (according to tutorial -- TODO double check)
     window: &'a Window,
+    clear: wgpu::Color,
 }
 
 impl<'a> State<'a> {
@@ -68,6 +68,12 @@ impl<'a> State<'a> {
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
         };
+        let clear = wgpu::Color {
+            r: 0.1,
+            g: 0.2,
+            b: 0.2,
+            a: 1.0,
+        };
 
         Self {
             window,
@@ -76,7 +82,14 @@ impl<'a> State<'a> {
             queue,
             config,
             size,
+            clear,
         }
+    }
+
+    pub fn alter_clear(&mut self) {
+        self.clear.r += 0.15;
+        self.clear.b += 0.2;
+        self.clear.g -= -0.1;
     }
 
     pub fn window(&self) -> &Window {
@@ -93,6 +106,13 @@ impl<'a> State<'a> {
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
+        match event {
+            WindowEvent::MouseInput { device_id: _, state: ElementState::Pressed, button: MouseButton::Left } => {
+                self.alter_clear();
+            },
+            _ => {},
+        };
+
         false
     }
 
@@ -114,12 +134,7 @@ impl<'a> State<'a> {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.1,
-                            g: 0.2,
-                            b: 0.2,
-                            a: 1.0,
-                        }),
+                        load: wgpu::LoadOp::Clear(self.clear),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
