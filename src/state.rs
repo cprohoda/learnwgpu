@@ -1,5 +1,5 @@
 use winit::{
-    event::{ElementState, MouseButton, WindowEvent}, window::Window
+    event::{ElementState, KeyEvent, MouseButton, WindowEvent}, keyboard::{Key, KeyCode, PhysicalKey}, window::Window
 };
 
 pub struct State<'a> {
@@ -14,7 +14,7 @@ pub struct State<'a> {
     // (according to tutorial -- TODO double check)
     window: &'a Window,
     clear: wgpu::Color,
-    render_pipeline: wgpu::RenderPipeline,
+    render_state: RenderPipelineState,
 }
 
 impl<'a> State<'a> {
@@ -75,26 +75,26 @@ impl<'a> State<'a> {
             b: 0.2,
             a: 1.0,
         };
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-            label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
+        let standard_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Standard Shader"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("standard_shader.wgsl").into()),
         });
         let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
             bind_group_layouts: &[],
             push_constant_ranges: &[],
         });
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
+        let standard_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Standard Render Pipeline"),
             layout: Some(&render_pipeline_layout),
             vertex: wgpu::VertexState {
-                module: &shader,
+                module: &standard_shader,
                 entry_point: "vs_main",
                 buffers: &[],
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
             },
             fragment: Some(wgpu::FragmentState {
-                module: &shader,
+                module: &standard_shader,
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
@@ -121,6 +121,48 @@ impl<'a> State<'a> {
             multiview: None,
             cache: None,
         });
+        let position_color_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Position Color Shader"),
+            source: wgpu::ShaderSource::Wgsl(include_str!("position_color_shader.wgsl").into()),
+        });
+        let position_color_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("Position Color Render Pipeline"),
+            layout: Some(&render_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &position_color_shader,
+                entry_point: "vs_main",
+                buffers: &[],
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &position_color_shader,
+                entry_point: "fs_main",
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: config.format,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: wgpu::PipelineCompilationOptions::default(),
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::TriangleList,
+                strip_index_format: None,
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: Some(wgpu::Face::Back),
+                unclipped_depth: false,
+                polygon_mode: wgpu::PolygonMode::Fill,
+                conservative: false,
+            },
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState {
+                count: 1,
+                mask: !0,
+                alpha_to_coverage_enabled: false,
+            },
+            multiview: None,
+            cache: None,
+        });
+        let render_state = RenderPipelineState::new(standard_pipeline, position_color_pipeline);
 
         Self {
             window,
@@ -130,7 +172,7 @@ impl<'a> State<'a> {
             config,
             size,
             clear,
-            render_pipeline,
+            render_state,
         }
     }
 
@@ -158,6 +200,11 @@ impl<'a> State<'a> {
             WindowEvent::MouseInput { device_id: _, state: ElementState::Pressed, button: MouseButton::Left } => {
                 self.alter_clear();
             },
+            WindowEvent::KeyboardInput { device_id: _, event: KeyEvent {physical_key: PhysicalKey::Code(KeyCode::Space), state: ElementState::Pressed, repeat: false, ..}, is_synthetic: _} => {
+                self.render_state.state = self.render_state.next();
+                println!("{:?}", event); // TODO: Fix double eventing for keyboard spacebar input
+                println!("Space pressed. New state: {:?}", self.render_state.state);
+            }
             _ => {},
         };
 
@@ -191,7 +238,14 @@ impl<'a> State<'a> {
                 timestamp_writes: None,
             });
 
-            render_pass.set_pipeline(&self.render_pipeline);
+            render_pass.set_pipeline(match self.render_state.state {
+                RenderState::Standard => {
+                    &self.render_state.standard
+                },
+                RenderState::PositionColor => {
+                    &self.render_state.position_color
+                },
+            });
             render_pass.draw(0..3, 0..1);
         }
 
@@ -199,5 +253,34 @@ impl<'a> State<'a> {
         output.present();
 
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+enum RenderState {
+    Standard,
+    PositionColor,
+}
+
+struct RenderPipelineState {
+    state: RenderState,
+    standard: wgpu::RenderPipeline,
+    position_color: wgpu::RenderPipeline,
+}
+
+impl RenderPipelineState {
+    fn new(standard: wgpu::RenderPipeline, position_color: wgpu::RenderPipeline) -> Self {
+        Self {
+            state: RenderState::Standard,
+            standard,
+            position_color,
+        }
+    }
+
+    fn next(&self) -> RenderState {
+        match self.state {
+            RenderState::Standard => RenderState::PositionColor,
+            RenderState::PositionColor => RenderState::Standard,
+        }
     }
 }

@@ -69,6 +69,9 @@ pub async fn run() {
                 WindowEvent::MouseInput{device_id: _, state: ElementState::Pressed, button: _} => {
                     state.input(event);
                 },
+                WindowEvent::KeyboardInput { device_id: _, event: _, is_synthetic: _} => {
+                    state.input(event);
+                },
                 WindowEvent::Resized(physical_size) => {
                     state.resize(*physical_size);
                 },
