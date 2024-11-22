@@ -238,14 +238,7 @@ impl<'a> State<'a> {
                 timestamp_writes: None,
             });
 
-            render_pass.set_pipeline(match self.render_state.state {
-                RenderState::Standard => {
-                    &self.render_state.standard
-                },
-                RenderState::PositionColor => {
-                    &self.render_state.position_color
-                },
-            });
+            render_pass.set_pipeline(self.render_state.pipeline());
             render_pass.draw(0..3, 0..1);
         }
 
@@ -274,6 +267,17 @@ impl RenderPipelineState {
             state: RenderState::Standard,
             standard,
             position_color,
+        }
+    }
+
+    fn pipeline(&self) -> &wgpu::RenderPipeline {
+        match self.state {
+            RenderState::Standard => {
+                &self.standard
+            },
+            RenderState::PositionColor => {
+                &self.position_color
+            },
         }
     }
 
