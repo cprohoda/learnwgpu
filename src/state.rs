@@ -1,3 +1,4 @@
+use wgpu::util::DeviceExt;
 use winit::{
     event::{ElementState, KeyEvent, MouseButton, WindowEvent}, keyboard::{Key, KeyCode, PhysicalKey}, window::Window
 };
@@ -15,6 +16,7 @@ pub struct State<'a> {
     window: &'a Window,
     clear: wgpu::Color,
     render_state: RenderPipelineState,
+    vertex_buffer: wgpu::Buffer,
 }
 
 impl<'a> State<'a> {
@@ -90,7 +92,7 @@ impl<'a> State<'a> {
             vertex: wgpu::VertexState {
                 module: &standard_shader,
                 entry_point: "vs_main",
-                buffers: &[],
+                buffers: &[Vertex::desc()],
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
             },
             fragment: Some(wgpu::FragmentState {
@@ -163,6 +165,13 @@ impl<'a> State<'a> {
             cache: None,
         });
         let render_state = RenderPipelineState::new(standard_pipeline, position_color_pipeline);
+        let vertex_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(VERTICES),
+                usage: wgpu::BufferUsages::VERTEX,
+            }
+        );
 
         Self {
             window,
@@ -173,6 +182,7 @@ impl<'a> State<'a> {
             size,
             clear,
             render_state,
+            vertex_buffer,
         }
     }
 
@@ -288,3 +298,38 @@ impl RenderPipelineState {
         }
     }
 }
+
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+struct Vertex {
+    position: [f32; 3],
+    color: [f32; 3],
+}
+
+impl Vertex {
+    fn desc() -> wgpu::VertexBufferLayout::<'static> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: 0,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
+                    shader_location: 1,
+                    format: wgpu::VertexFormat::Float32x3,
+                }
+            ]
+        }
+    }
+}
+
+const VERTICES: &[Vertex] = &[
+    Vertex { position: [0.0, 0.5, 0.0], color: [1.0, 0.0, 0.0] },
+    Vertex { position: [-0.5, -0.5, 0.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [0.5, -0.5, 0.0], color: [0.0, 0.0, 1.0] },
+];

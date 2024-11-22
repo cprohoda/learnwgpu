@@ -14,6 +14,7 @@ env_logger = "0.10"
 log = "0.4"
 wgpu = "22.0"
 tokio = { version = "1.41.1", features = ["rt", "macros"] }
+bytemuck = { version = "1.16.0", features = ["derive"] }
 
 [features]
 rwh_05 = ["winit/rwh_05"]
