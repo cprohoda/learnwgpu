@@ -17,6 +17,7 @@ pub struct State<'a> {
     clear: wgpu::Color,
     render_state: RenderPipelineState,
     vertex_buffer: wgpu::Buffer,
+    num_vertices: u32,
 }
 
 impl<'a> State<'a> {
@@ -173,6 +174,8 @@ impl<'a> State<'a> {
             }
         );
 
+        let num_vertices = VERTICES.len() as u32;
+
         Self {
             window,
             surface,
@@ -183,6 +186,7 @@ impl<'a> State<'a> {
             clear,
             render_state,
             vertex_buffer,
+            num_vertices,
         }
     }
 
@@ -249,7 +253,8 @@ impl<'a> State<'a> {
             });
 
             render_pass.set_pipeline(self.render_state.pipeline());
-            render_pass.draw(0..3, 0..1);
+            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.draw(0..self.num_vertices, 0..1);
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
@@ -322,8 +327,8 @@ impl Vertex {
                     offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x3,
-                }
-            ]
+                },
+            ],
         }
     }
 }
