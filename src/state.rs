@@ -202,17 +202,36 @@ impl<'a> State<'a> {
     pub fn input(&mut self, event: &WindowEvent) -> bool {
         match event {
             WindowEvent::MouseInput { device_id: _, state: ElementState::Pressed, button: MouseButton::Left } => {
+                println!("{:?}", event);
                 self.alter_clear();
             },
-            WindowEvent::KeyboardInput { event: KeyEvent {physical_key: PhysicalKey::Code(KeyCode::Space), state: ElementState::Pressed, ..}, ..} => {
+            WindowEvent::KeyboardInput { event: KeyEvent {
+                physical_key: PhysicalKey::Code(KeyCode::Space),
+                state: ElementState::Pressed,
+                repeat: false,
+                ..
+            }, ..} => {
                 self.render_state.state = self.render_state.next();
                 println!("{:?}", event); // TODO: Fix double eventing for keyboard spacebar input
                 println!("Space pressed. New state: {:?}", self.render_state.state);
             },
-            WindowEvent::KeyboardInput { event: KeyEvent {physical_key: PhysicalKey::Code(KeyCode::KeyZ), state: ElementState::Pressed,..}, ..} => {
-                println!("{:?}", self.shape_state.state);
+            WindowEvent::KeyboardInput { event: KeyEvent {
+                physical_key: PhysicalKey::Code(KeyCode::KeyZ),
+                state: ElementState::Pressed,
+                repeat: false,
+                ..
+            }, ..} => {
+                println!("{:?}", event);
                 self.shape_state.swap();
             },
+            WindowEvent::KeyboardInput { event: KeyEvent {
+                physical_key: PhysicalKey::Code(KeyCode::KeyX),
+                state: ElementState::Pressed,
+                repeat: false,
+                ..
+            }, ..} => {
+                panic!("panic on x");
+            }
             _ => {},
         };
 
@@ -385,14 +404,14 @@ impl ShapeState {
     fn new(device: &wgpu::Device) -> Self {
         let pentagon_vertex_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
+                label: Some("Pentagon Vertex Buffer"),
                 contents: bytemuck::cast_slice(PENTAGON_VERTICES),
                 usage: wgpu::BufferUsages::VERTEX,
             }
         );
         let pentagon_index_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
+                label: Some("Pentagon Index Buffer"),
                 contents: bytemuck::cast_slice(PENTAGON_INDICES),
                 usage: wgpu::BufferUsages::INDEX,
             }
