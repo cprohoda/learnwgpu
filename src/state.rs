@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 use winit::{
-    event::{ElementState, KeyEvent, MouseButton, WindowEvent}, keyboard::{Key, KeyCode, PhysicalKey}, window::Window
+    event::{ElementState, KeyEvent, MouseButton, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::Window
 };
 
 pub struct State<'a> {
@@ -212,8 +212,6 @@ impl<'a> State<'a> {
                 ..
             }, ..} => {
                 self.render_state.state = self.render_state.next();
-                println!("{:?}", event); // TODO: Fix double eventing for keyboard spacebar input
-                println!("Space pressed. New state: {:?}", self.render_state.state);
             },
             WindowEvent::KeyboardInput { event: KeyEvent {
                 physical_key: PhysicalKey::Code(KeyCode::KeyZ),
@@ -221,17 +219,8 @@ impl<'a> State<'a> {
                 repeat: false,
                 ..
             }, ..} => {
-                println!("{:?}", event);
                 self.shape_state.swap();
             },
-            WindowEvent::KeyboardInput { event: KeyEvent {
-                physical_key: PhysicalKey::Code(KeyCode::KeyX),
-                state: ElementState::Pressed,
-                repeat: false,
-                ..
-            }, ..} => {
-                panic!("panic on x");
-            }
             _ => {},
         };
 

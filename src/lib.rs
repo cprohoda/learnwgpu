@@ -4,7 +4,6 @@ use winit::{
     keyboard::{KeyCode, PhysicalKey},
     window::WindowBuilder,
 };
-use log::info;
 #[cfg(target_arch="wasm32")]
 use wasm_bindgen::prelude::*;
 #[cfg(target_arch="wasm32")]
@@ -66,12 +65,6 @@ pub async fn run() {
                     },
                     ..
                 } => control_flow.exit(),
-                WindowEvent::MouseInput{device_id: _, state: ElementState::Pressed, button: _} => {
-                    state.input(event);
-                },
-                WindowEvent::KeyboardInput { device_id: _, event: _, is_synthetic: _} => {
-                    state.input(event);
-                },
                 WindowEvent::Resized(physical_size) => {
                     state.resize(*physical_size);
                 },
