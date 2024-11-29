@@ -1,4 +1,6 @@
-use wgpu::util::DeviceExt;
+use std::{mem::size_of_val, ops::{Range, RangeBounds}};
+
+use wgpu::{util::DeviceExt, BufferAddress, BufferSlice};
 use winit::{
     event::{ElementState, KeyEvent, MouseButton, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::Window
 };
@@ -255,10 +257,12 @@ impl<'a> State<'a> {
             });
 
             render_pass.set_pipeline(self.render_state.pipeline());
-            let (vertex_buffer, index_buffer, num_indices) = self.shape_state.buffers();
-            render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint16);
-            render_pass.draw_indexed(0..num_indices, 0, 0..1);
+            // let (vertex_buffer, index_buffer, num_indices) = self.shape_state.buffers();
+            render_pass.set_vertex_buffer(0, self.shape_state.vertex_buffer_slice());
+            render_pass.set_index_buffer(self.shape_state.index_buffer_slice(), wgpu::IndexFormat::Uint16);
+
+
+            render_pass.draw_indexed(self.shape_state.index_buffer_indices_u32(), 0, 0..1);
         }
 
         self.queue.submit(std::iter::once(encoder.finish()));
@@ -381,70 +385,95 @@ enum Shapes {
 
 struct ShapeState {
     state: Shapes,
-    pentagon_vertex_buffer: wgpu::Buffer,
-    pentagon_index_buffer: wgpu::Buffer,
-    pentagon_num_indices: u32,
-    arrow_vertex_buffer: wgpu::Buffer,
-    arrow_index_buffer: wgpu::Buffer,
-    arrow_num_indices: u32,
+    vertex_buffer: wgpu::Buffer,
+    index_buffer: wgpu::Buffer,
 }
 
 impl ShapeState {
     fn new(device: &wgpu::Device) -> Self {
-        let pentagon_vertex_buffer = device.create_buffer_init(
+        let vertex_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Pentagon Vertex Buffer"),
-                contents: bytemuck::cast_slice(PENTAGON_VERTICES),
+                contents: &[
+                    bytemuck::cast_slice(PENTAGON_VERTICES),
+                    bytemuck::cast_slice(ARROW_VERTICES),
+                ].concat(),
                 usage: wgpu::BufferUsages::VERTEX,
             }
         );
-        let pentagon_index_buffer = device.create_buffer_init(
+        let index_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Pentagon Index Buffer"),
-                contents: bytemuck::cast_slice(PENTAGON_INDICES),
+                contents: &[
+                    bytemuck::cast_slice(PENTAGON_INDICES),
+                    bytemuck::cast_slice(&core::array::from_fn::<u16, { ARROW_INDICES.len() }, _>(|i| {
+                        println!("{:?}", ARROW_INDICES[i] + PENTAGON_INDICES.len() as u16);
+                        ARROW_INDICES[i] + PENTAGON_INDICES.len() as u16
+                })),
+                ].concat(),
                 usage: wgpu::BufferUsages::INDEX,
             }
         );
-        let pentagon_num_indices = PENTAGON_INDICES.len() as u32;
-
-
-        let arrow_vertex_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(ARROW_VERTICES),
-                usage: wgpu::BufferUsages::VERTEX,
-            }
-        );
-        let arrow_index_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(ARROW_INDICES),
-                usage: wgpu::BufferUsages::INDEX,
-            }
-        );
-        let arrow_num_indices = ARROW_INDICES.len() as u32;
 
         Self {
             state: Shapes::Pentagon,
-            pentagon_vertex_buffer,
-            pentagon_index_buffer,
-            pentagon_num_indices,
-            arrow_vertex_buffer,
-            arrow_index_buffer,
-            arrow_num_indices,
+            vertex_buffer,
+            index_buffer,
         }
     }
 
-    fn buffers(&self) -> (&wgpu::Buffer, &wgpu::Buffer, u32) {
+    fn vertex_buffer_indices(&self) -> Range<u64> {
+        let pentagon_len = PENTAGON_VERTICES.len() as u64;
+        let arrow_len = ARROW_VERTICES.len() as u64;
+
         match self.state {
             Shapes::Pentagon => {
-                (&self.pentagon_vertex_buffer, &self.pentagon_index_buffer, self.pentagon_num_indices)
+                0..pentagon_len
             },
             Shapes::Arrow => {
-                (&self.arrow_vertex_buffer, &self.arrow_index_buffer, self.arrow_num_indices)
+                pentagon_len..(pentagon_len + arrow_len)
             },
         }
-    } 
+    }
+
+    fn vertex_buffer_slice(&self) -> BufferSlice {
+        println!("{:?}", self.vertex_buffer);
+        self.vertex_buffer.slice(self.vertex_buffer_indices())
+    }
+
+    fn index_buffer_indices(&self) -> Range<u64> {
+        let pentagon_len = PENTAGON_INDICES.len() as u64;
+        let arrow_len = ARROW_INDICES.len() as u64;
+
+        match self.state {
+            Shapes::Pentagon => {
+                0..pentagon_len
+            },
+            Shapes::Arrow => {
+                pentagon_len..(pentagon_len + arrow_len)
+            }
+        }
+    }
+
+    fn index_buffer_indices_u32(&self) -> Range<u32> {
+        let pentagon_len = PENTAGON_VERTICES.len() as u32;
+        let arrow_len = ARROW_VERTICES.len() as u32;
+
+        match self.state {
+            Shapes::Pentagon => {
+                0..pentagon_len
+            },
+            Shapes::Arrow => {
+                pentagon_len..(pentagon_len + arrow_len)
+            }
+        }
+    }
+
+    fn index_buffer_slice(&self) -> BufferSlice {
+        let indices= self.index_buffer_indices();
+        println!("{:?}", indices);
+        self.index_buffer.slice(self.index_buffer_indices())
+    }
 
     fn swap(&mut self) {
         match self.state {
