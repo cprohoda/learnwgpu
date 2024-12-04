@@ -16,6 +16,11 @@ wgpu = "22.0"
 tokio = { version = "1.41.1", features = ["rt", "macros"] }
 bytemuck = { version = "1.16.0", features = ["derive"] }
 
+[dependencies.image]
+version = "0.24"
+default-features = false
+features = ["png", "jpeg"]
+
 [features]
 rwh_05 = ["winit/rwh_05"]
 
