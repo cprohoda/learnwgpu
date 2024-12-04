@@ -1,6 +1,6 @@
-use std::{mem::size_of_val, ops::{Range, RangeBounds}};
+use std::ops::Range;
 
-use wgpu::{util::DeviceExt, BufferAddress, BufferSlice};
+use wgpu::{util::DeviceExt, BufferSlice};
 use winit::{
     event::{ElementState, KeyEvent, MouseButton, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::Window
 };
@@ -257,10 +257,8 @@ impl<'a> State<'a> {
             });
 
             render_pass.set_pipeline(self.render_state.pipeline());
-            // let (vertex_buffer, index_buffer, num_indices) = self.shape_state.buffers();
             render_pass.set_vertex_buffer(0, self.shape_state.vertex_buffer_slice());
             render_pass.set_index_buffer(self.shape_state.index_buffer_slice(), wgpu::IndexFormat::Uint16);
-
 
             render_pass.draw_indexed(self.shape_state.index_buffer_indices(), self.shape_state.base_vertex(), 0..1);
         }
@@ -410,13 +408,7 @@ impl ShapeState {
     }
 
     fn vertex_buffer_slice(&self) -> BufferSlice {
-        println!("{:?}", self.vertex_buffer);
         self.vertex_buffer.slice(..)
-    }
-
-    fn index_buffer_indices_u64(&self) -> Range<u64> {
-        let range = self.index_buffer_indices();
-        Range {start: range.start as u64, end: range.end as u64}
     }
 
     fn index_buffer_indices(&self) -> Range<u32> {
@@ -426,14 +418,12 @@ impl ShapeState {
             },
             Shapes::Arrow => {
                 9..(9 + 24)
-            }
+            },
         }
     }
 
     fn index_buffer_slice(&self) -> BufferSlice {
-        let indices= self.index_buffer_indices_u64();
-        println!("{:?}", indices);
-        self.index_buffer.slice(self.index_buffer_indices_u64())
+        self.index_buffer.slice(..)
     }
 
     fn base_vertex(&self) -> i32 {
