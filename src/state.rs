@@ -345,14 +345,14 @@ const VERTICES: &[Vertex] = &[
     Vertex { position: [-0.21918549, -0.44939706, 0.0], color: [0.5, 0.0, 0.5] },
     Vertex { position: [0.35966998, -0.3473291, 0.0], color: [0.5, 0.0, 0.5] },
     Vertex { position: [0.44147372, 0.2347359, 0.0], color: [0.5, 0.0, 0.5] },
-    Vertex { position: [0.0, 0.0, 5.0], color: [0.0, 0.0, 1.0] },
-    Vertex { position: [-1.5, -1.5, 2.0], color: [0.0, 1.0, 0.0] },
-    Vertex { position: [1.5, -1.5, 2.0], color: [0.0, 1.0, 0.0] },
-    Vertex { position: [0.0, 2.0, 2.0], color: [0.0, 1.0, 0.0] },
-    Vertex { position: [0.0, 0.0, 2.0], color: [0.0, 1.0, 0.0] },
-    Vertex { position: [-0.7, -0.7, 0.0], color: [1.0, 0.0, 0.0] },
-    Vertex { position: [-0.7, 0.7, 0.0], color: [1.0, 0.0, 0.0] },
-    Vertex { position: [0.0, 1.0, 0.0], color: [1.0, 0.0, 0.0] },
+    Vertex { position: [0.0, 2.0, 0.0], color: [0.0, 0.0, 1.0] },
+    Vertex { position: [-0.15, 1.0, 0.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [0.15, 1.0, 0.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [0.0, 1.0, 0.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [0.0, 1.0, 0.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [-0.07, 0.0, 0.0], color: [1.0, 0.0, 0.0] },
+    Vertex { position: [-0.07, 0.0, 0.0], color: [1.0, 0.0, 0.0] },
+    Vertex { position: [0.0, 0.0, 0.0], color: [1.0, 0.0, 0.0] },
 ];
 
 const INDICES: &[u16] = &[
