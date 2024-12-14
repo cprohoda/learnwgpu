@@ -19,6 +19,7 @@ pub struct State<'a> {
     clear: wgpu::Color,
     render_state: RenderPipelineState,
     shape_state: ShapeState,
+    diffuse_bind_group: wgpu::BindGroup,
 }
 
 impl<'a> State<'a> {
@@ -170,7 +171,7 @@ impl<'a> State<'a> {
         });
         let render_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[],
+            bind_group_layouts: &[&texture_bind_group_layout],
             push_constant_ranges: &[],
         });
         let standard_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -264,6 +265,7 @@ impl<'a> State<'a> {
             clear,
             render_state,
             shape_state,
+            diffuse_bind_group,
         }
     }
 
@@ -342,6 +344,7 @@ impl<'a> State<'a> {
             });
 
             render_pass.set_pipeline(self.render_state.pipeline());
+            render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
             render_pass.set_vertex_buffer(0, self.shape_state.vertex_buffer_slice());
             render_pass.set_index_buffer(self.shape_state.index_buffer_slice(), wgpu::IndexFormat::Uint16);
 
