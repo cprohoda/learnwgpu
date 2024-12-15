@@ -14,6 +14,7 @@ use console_error_panic_hook;
 use wgpu::web_sys;
 
 
+mod camera;
 mod state;
 mod texture;
 

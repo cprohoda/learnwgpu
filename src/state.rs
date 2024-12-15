@@ -5,7 +5,7 @@ use winit::{
     event::{ElementState, KeyEvent, MouseButton, WindowEvent}, keyboard::{KeyCode, PhysicalKey}, window::Window
 };
 
-use crate::texture;
+use crate::{camera, texture};
 
 pub struct State<'a> {
     surface: wgpu::Surface<'a>,
@@ -23,6 +23,7 @@ pub struct State<'a> {
     shape_state: ShapeState,
     diffuse_bind_group: wgpu::BindGroup,
     diffuse_texture: texture::Texture,
+    camera: camera::Camera,
 }
 
 impl<'a> State<'a> {
@@ -212,6 +213,16 @@ impl<'a> State<'a> {
         let render_state = RenderPipelineState::new(standard_pipeline, position_color_pipeline);
         let shape_state = ShapeState::new(&device);
 
+        let camera = camera::Camera {
+            eye: (0.0, 1.0, 2.0).into(),
+            target: (0.0, 0.0, 0.0).into(),
+            up: cgmath::Vector3::unit_y(),
+            aspect: config.width as f32 / config.height as f32,
+            fovy: 45.0,
+            znear: 0.1,
+            zfar: 100.0,
+        };
+
         Self {
             window,
             surface,
@@ -224,6 +235,7 @@ impl<'a> State<'a> {
             shape_state,
             diffuse_bind_group,
             diffuse_texture,
+            camera,
         }
     }
 
