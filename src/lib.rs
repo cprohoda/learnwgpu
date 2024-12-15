@@ -15,6 +15,7 @@ use wgpu::web_sys;
 
 
 mod state;
+mod texture;
 
 use state::State;
 
