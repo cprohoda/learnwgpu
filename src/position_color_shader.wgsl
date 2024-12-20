@@ -1,4 +1,11 @@
 // Vertex
+struct CameraUniform {
+    view_proj: mat4x4<f32>,
+};
+
+@group(1) @binding(0)
+var<uniform> camera: CameraUniform;
+
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) vert_pos: vec3<f32>,
@@ -11,7 +18,7 @@ fn vs_main(
     var out: VertexOutput;
     let x = f32(1  - i32(in_vertex_index)) * 0.5;
     let y = f32(i32(in_vertex_index & 1u) * 2 - 1) * 0.5;
-    out.clip_position = vec4<f32>(x, y, 0.0, 1.0);
+    out.clip_position = camera.view_proj * vec4<f32>(x, y, 0.0, 1.0);
     out.vert_pos = out.clip_position.xyz;
     return out;
 }
